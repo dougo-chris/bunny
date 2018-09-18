@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+
+basedir="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+
+devop_command()
+{
+  case "$1" in
+    "clean")
+      rm -rf ${basedir}/.elixir_ls
+      rm -rf ${basedir}/_build
+      rm -rf ${basedir}/deps
+      rm -rf ${basedir}/cover
+      rm -rf ${basedir}/doc
+      ;;
+
+    "build")
+      mix deps.clean --unused && \
+      mix deps.update --all && \
+      mix deps.get
+      ;;
+
+    "iex")
+      iex -S mix
+      ;;
+
+    "mix")
+      shift
+      mix $@
+      ;;
+
+    "test")
+      shift
+      devop_test $@
+      ;;
+
+    "docs")
+      mix docs
+      ;;
+
+    # Default case
+    *)
+      echo "invalid  command : check README.md"
+      return 1
+  esac
+}
+
+devop_test()
+{
+  case "$1" in
+    "")
+      mix test
+      ;;
+
+    "credo")
+      mix credo --strict
+      ;;
+
+    "dialyzer")
+      mix dialyzer --halt-exit-status
+      ;;
+
+    "format")
+      mix format --check-formatted
+      ;;
+
+    "all")
+      mix credo --strict && \
+      mix dialyzer --halt-exit-status && \
+      mix format --check-formatted && \
+      mix test
+      ;;
+
+    "coverage")
+      mix coveralls.html
+      ;;
+
+    "watch")
+      mix test.watch
+      ;;
+
+    *)
+      echo "invalid  command : check README.md"
+      return 1
+      ;;
+  esac
+}
+
+devop_command $@
