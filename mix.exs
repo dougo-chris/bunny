@@ -16,10 +16,7 @@ defmodule Linklab.Bunny.Mixfile do
       package: package(),
 
       aliases: aliases(),
-      dialyzer: dialyzer(),
-      test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.html": :test],
-      docs: docs()
+      dialyzer: dialyzer()
     ]
   end
 
@@ -40,10 +37,7 @@ defmodule Linklab.Bunny.Mixfile do
 
       # DEV AND TEST
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
-      {:credo, "~> 0.9", only: [:dev, :test]},
-      {:ex_doc, "~> 0.18.1", only: :dev},
-      {:excoveralls, "~> 0.7", only: :test},
-      {:mix_test_watch, "~> 0.3", only: :dev, runtime: false}
+      {:mix_test_watch, "~> 0.9", only: :dev, runtime: false}
     ]
   end
 
@@ -71,22 +65,6 @@ defmodule Linklab.Bunny.Mixfile do
     [
       plt_add_deps: :transitive,
       plt_add_apps: [:mix]
-    ]
-  end
-
-  defp docs do
-    [
-      extras: ["README.md"],
-      main: "readme",
-      groups_for_modules: groups_for_modules()
-    ]
-  end
-
-  defp groups_for_modules do
-    [
-      "Pools": [
-        # DomainLogic.Lib.TableLib,
-      ]
     ]
   end
 end
