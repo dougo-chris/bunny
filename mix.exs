@@ -20,12 +20,6 @@ defmodule Linklab.Bunny.Mixfile do
     ]
   end
 
-  # def application do
-  #   [
-  #     extra_applications: [:logger]
-  #   ]
-  # end
-
   defp elixirc_paths(:test), do: ["lib", "priv", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
