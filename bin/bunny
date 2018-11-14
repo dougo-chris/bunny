@@ -14,7 +14,11 @@ devop_command()
       ;;
 
     "build")
-      mix deps.clean --unused && \
+      mix deps.get
+      ;;
+
+    "upgrade")
+      mix deps.clean --unused --unlock && \
       mix deps.update --all && \
       mix deps.get
       ;;
