@@ -29,4 +29,12 @@ defmodule Linklab.Bunny.Consumer do
       AMQP.Basic.publish(channel, exchange, routing_key, payload, options)
     end)
   end
+
+  def ack(channel, tag) do
+    AMQP.Basic.ack(channel, tag)
+  end
+
+  def reject(channel, tag, options) do
+    AMQP.Basic.reject(channel, tag, options)
+  end
 end
