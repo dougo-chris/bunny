@@ -25,9 +25,9 @@ defmodule Linklab.Bunny.Mixfile do
 
   defp deps do
     [
-      {:ranch_proxy_protocol, "~> 2.0", override: true},
-      {:amqp, "~> 1.0"},
-      {:poolboy, "~> 1.5.1"},
+      {:ranch_proxy_protocol, "~> 2.1", override: true},
+      {:amqp, "~> 1.1"},
+      {:poolboy, "~> 1.5"},
 
       # DEV AND TEST
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
