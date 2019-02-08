@@ -14,11 +14,12 @@ devop_command()
       ;;
 
     "build")
+      mix deps.update --all && \
       mix deps.get
       ;;
 
     "upgrade")
-      mix deps.clean --unused --unlock && \
+      mix deps.clean --unused && \
       mix deps.update --all && \
       mix deps.get
       ;;
@@ -35,10 +36,6 @@ devop_command()
     "test")
       shift
       devop_test $@
-      ;;
-
-    "docs")
-      mix docs
       ;;
 
     # Default case
@@ -59,13 +56,12 @@ devop_test()
       mix dialyzer --halt-exit-status
       ;;
 
-    "all")
-      mix dialyzer --halt-exit-status && \
-      mix test
-      ;;
-
     "watch")
       mix test.watch
+      ;;
+
+    "dev")
+      mix test.watch --only dev:true
       ;;
 
     *)

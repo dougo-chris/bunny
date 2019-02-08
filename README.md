@@ -1,3 +1,26 @@
+# Linklab.Rabbit
+
+# DEVELOPMENT
+```./bin/api_linklab clean```     To clean runtime dependencies
+
+```./bin/api_linklab build```     To install the dependencies
+
+```./bin/api_linklab upgrade```   To upgrade the dependencies
+
+```./bin/api_linklab iex```       To run the elixir command line
+
+```./bin/api_linklab mix```       To run a mix task
+
+# TESTING
+
+```./bin/api_linklab test```            Run the tests
+
+```./bin/api_linklab test dialyzer```   Execute dialyzer
+
+```./bin/api_linklab test watch```      Continuously run the tests
+
+```./bin/api_linklab test dev```        Continuously run the dev tests
+
 # Rabbit
 
 ## Docker ENV
