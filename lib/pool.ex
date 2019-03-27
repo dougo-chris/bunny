@@ -42,11 +42,8 @@ defmodule Linklab.Bunny.Pool do
 
   def with_channel(name, func) do
     :poolboy.transaction(:"#{name}_channel_pool", fn pid ->
-      case GenServer.call(pid, :channel) do
-        {:ok, channel, opts} ->
-          func.(channel, opts)
-        error ->
-          error
+      with {:ok, channel, opts} <- GenServer.call(pid, :channel) do
+        func.(channel, opts)
       end
     end)
   end
