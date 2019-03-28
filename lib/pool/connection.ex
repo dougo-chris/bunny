@@ -1,4 +1,5 @@
 defmodule Linklab.Bunny.Pool.Connection do
+  @moduledoc false
   use GenServer
   use AMQP
 
@@ -69,11 +70,9 @@ defmodule Linklab.Bunny.Pool.Connection do
   end
 
   def terminate(_reason, %{connection: connection, status: :connected}) do
-    try do
-      Connection.close(connection)
-    catch
-      _, _ -> :ok
-    end
+    Connection.close(connection)
+  catch
+    _, _ -> :ok
   end
 
   def terminate(_reason, _state) do

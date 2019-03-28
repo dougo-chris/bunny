@@ -62,6 +62,14 @@ devop_test()
       mix dialyzer --halt-exit-status
       ;;
 
+    "credo")
+      mix credo --strict
+      ;;
+
+    "format")
+      mix format
+      ;;
+
     "watch")
       mix test.watch
       ;;

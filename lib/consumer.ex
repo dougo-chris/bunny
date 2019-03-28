@@ -1,11 +1,15 @@
 defmodule Linklab.Bunny.Consumer do
+  @moduledoc false
 
-  @callback setup(channel :: AMQP.Channel.t, opts :: map) :: {:ok, opts :: map} | {:error, String.t}
-  @callback basic_deliver(channel :: AMQP.Channel.t, opts :: map, payload :: any, meta :: map) :: {:ok, opts :: map} | {:error, String.t}
-  @callback basic_consume_ok(channel :: AMQP.Channel.t, opts :: map, meta :: map) :: {:ok, opts :: map} | {:error, String.t}
-  @callback basic_cancel(channel :: AMQP.Channel.t, opts :: map, meta :: map) :: {:ok, opts :: map} | {:error, String.t}
-  @callback basic_cancel_ok(channel :: AMQP.Channel.t, opts :: map, meta :: map) :: {:ok, opts :: map} | {:error, String.t}
-  @callback basic_return(channel :: AMQP.Channel.t, opts :: map, payload :: any, meta :: map) :: {:ok, opts :: map} | {:error, String.t}
+  alias AMQP.Basic, as: AMQPBasic
+  alias Linklab.Bunny.Pool, as: BunnyPool
+
+  @callback setup(AMQP.Channel.t, map) :: {:ok, map} | {:error, String.t}
+  @callback basic_deliver(AMQP.Channel.t, map, any, map) :: {:ok, map} | {:error, String.t}
+  @callback basic_consume_ok(AMQP.Channel.t, map, map) :: {:ok, map} | {:error, String.t}
+  @callback basic_cancel(AMQP.Channel.t, map, map) :: {:ok, map} | {:error, String.t}
+  @callback basic_cancel_ok(AMQP.Channel.t, map, map) :: {:ok, map} | {:error, String.t}
+  @callback basic_return(AMQP.Channel.t, map, any, map) :: {:ok, map} | {:error, String.t}
 
   defmacro __using__(_opts) do
     quote do
@@ -25,16 +29,16 @@ defmodule Linklab.Bunny.Consumer do
   end
 
   def publish(name, routing_key, payload, options \\ []) do
-    Linklab.Bunny.Pool.with_channel(name, fn channel, %{exchange: exchange} ->
-      AMQP.Basic.publish(channel, exchange, routing_key, payload, options)
+    BunnyPool.with_channel(name, fn channel, %{exchange: exchange} ->
+      AMQPBasic.publish(channel, exchange, routing_key, payload, options)
     end)
   end
 
   def ack(channel, tag) do
-    AMQP.Basic.ack(channel, tag)
+    AMQPBasic.ack(channel, tag)
   end
 
   def reject(channel, tag, options) do
-    AMQP.Basic.reject(channel, tag, options)
+    AMQPBasic.reject(channel, tag, options)
   end
 end

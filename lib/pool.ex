@@ -1,5 +1,9 @@
 defmodule Linklab.Bunny.Pool do
+  @moduledoc false
   use GenServer
+
+  alias Linklab.Bunny.Pool.Channel, as: BunnyPoolChannel
+  alias Linklab.Bunny.Pool.Connection, as: BunnyPoolConnection
 
   @channel_size 5
   @channel_overflow 0
@@ -16,7 +20,7 @@ defmodule Linklab.Bunny.Pool do
 
         pool_opts = [
           name:           {:local, :"#{name}_channel_pool"},
-          worker_module:  Linklab.Bunny.Pool.Channel,
+          worker_module:  BunnyPoolChannel,
           size:           opts[:channel_size]     || @channel_size,
           max_overflow:   opts[:channel_overflow] || @channel_overflow,
           strategy:       @channel_strategy
@@ -25,7 +29,7 @@ defmodule Linklab.Bunny.Pool do
         [
           %{
             id: :"#{name}_connection_pool",
-            start: {Linklab.Bunny.Pool.Connection, :start_link, [opts]}
+            start: {BunnyPoolConnection, :start_link, [opts]}
           },
           :poolboy.child_spec(:"#{name}_channel_pool", pool_opts, opts) |
           children
@@ -37,7 +41,7 @@ defmodule Linklab.Bunny.Pool do
   end
 
   def get_connection(name) do
-    GenServer.call(Linklab.Bunny.Pool.Connection.name(name), :connection)
+    GenServer.call(BunnyPoolConnection.name(name), :connection)
   end
 
   def with_channel(name, func) do

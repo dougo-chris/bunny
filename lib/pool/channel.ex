@@ -1,4 +1,5 @@
 defmodule Linklab.Bunny.Pool.Channel do
+  @moduledoc false
   use GenServer
   use AMQP
 
@@ -71,7 +72,6 @@ defmodule Linklab.Bunny.Pool.Channel do
 
   # Deal with producer messages
   def handle_info({:basic_return, payload, meta}, %{channel: channel, opts: opts} = state) do
-    IO.inspect({:basic_return, self()})
     case basic_return(channel, opts, payload, meta) do
       {:ok, opts} ->
         {:noreply, %{state | opts: opts}}
@@ -129,11 +129,9 @@ defmodule Linklab.Bunny.Pool.Channel do
   end
 
   def terminate(_reason, %{channel: channel, status: :connected}) do
-    try do
-      Channel.close(channel)
-    catch
-      _, _ -> :ok
-    end
+    Channel.close(channel)
+  catch
+    _, _ -> :ok
   end
 
   def terminate(_reason, _state) do

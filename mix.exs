@@ -31,6 +31,7 @@ defmodule Linklab.Bunny.Mixfile do
 
       # DEV AND TEST
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
+      {:credo, "~>1.0", only: :dev, runtime: false},
       {:mix_test_watch, "~> 0.9", only: :dev, runtime: false}
     ]
   end
