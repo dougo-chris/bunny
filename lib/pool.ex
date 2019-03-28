@@ -17,13 +17,12 @@ defmodule Linklab.Bunny.Pool do
   def init(opts) do
     children =
       Enum.reduce(opts, [], fn %{name: name} = opts, children ->
-
         pool_opts = [
-          name:           {:local, :"#{name}_channel_pool"},
-          worker_module:  BunnyPoolChannel,
-          size:           opts[:channel_size]     || @channel_size,
-          max_overflow:   opts[:channel_overflow] || @channel_overflow,
-          strategy:       @channel_strategy
+          name: {:local, :"#{name}_channel_pool"},
+          worker_module: BunnyPoolChannel,
+          size: opts[:channel_size] || @channel_size,
+          max_overflow: opts[:channel_overflow] || @channel_overflow,
+          strategy: @channel_strategy
         ]
 
         [
@@ -31,10 +30,9 @@ defmodule Linklab.Bunny.Pool do
             id: :"#{name}_connection_pool",
             start: {BunnyPoolConnection, :start_link, [opts]}
           },
-          :poolboy.child_spec(:"#{name}_channel_pool", pool_opts, opts) |
-          children
+          :poolboy.child_spec(:"#{name}_channel_pool", pool_opts, opts)
+          | children
         ]
-
       end)
 
     Supervisor.start_link(children, strategy: :one_for_one)

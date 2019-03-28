@@ -6,7 +6,7 @@ defmodule Linklab.Bunny.Pool.Connection do
   @reconnect_after_ms 5_000
 
   def start_link(%{name: name} = opts) do
-    GenServer.start_link(__MODULE__, opts, [name: name(name)])
+    GenServer.start_link(__MODULE__, opts, name: name(name))
   end
 
   def name(name) do

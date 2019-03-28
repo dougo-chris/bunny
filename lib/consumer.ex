@@ -4,12 +4,12 @@ defmodule Linklab.Bunny.Consumer do
   alias AMQP.Basic, as: AMQPBasic
   alias Linklab.Bunny.Pool, as: BunnyPool
 
-  @callback setup(AMQP.Channel.t, map) :: {:ok, map} | {:error, String.t}
-  @callback basic_deliver(AMQP.Channel.t, map, any, map) :: {:ok, map} | {:error, String.t}
-  @callback basic_consume_ok(AMQP.Channel.t, map, map) :: {:ok, map} | {:error, String.t}
-  @callback basic_cancel(AMQP.Channel.t, map, map) :: {:ok, map} | {:error, String.t}
-  @callback basic_cancel_ok(AMQP.Channel.t, map, map) :: {:ok, map} | {:error, String.t}
-  @callback basic_return(AMQP.Channel.t, map, any, map) :: {:ok, map} | {:error, String.t}
+  @callback setup(AMQP.Channel.t(), map) :: {:ok, map} | {:error, String.t()}
+  @callback basic_deliver(AMQP.Channel.t(), map, any, map) :: {:ok, map} | {:error, String.t()}
+  @callback basic_consume_ok(AMQP.Channel.t(), map, map) :: {:ok, map} | {:error, String.t()}
+  @callback basic_cancel(AMQP.Channel.t(), map, map) :: {:ok, map} | {:error, String.t()}
+  @callback basic_cancel_ok(AMQP.Channel.t(), map, map) :: {:ok, map} | {:error, String.t()}
+  @callback basic_return(AMQP.Channel.t(), map, any, map) :: {:ok, map} | {:error, String.t()}
 
   defmacro __using__(_opts) do
     quote do

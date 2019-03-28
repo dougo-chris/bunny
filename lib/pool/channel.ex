@@ -14,19 +14,29 @@ defmodule Linklab.Bunny.Pool.Channel do
   def setup(channel, %{handler: handler} = opts), do: handler.setup(channel, opts)
   def setup(_, opts), do: {:ok, opts}
 
-  def basic_deliver(channel, %{handler: handler} = opts, payload, meta), do: handler.basic_deliver(channel, opts, payload, meta)
+  def basic_deliver(channel, %{handler: handler} = opts, payload, meta),
+    do: handler.basic_deliver(channel, opts, payload, meta)
+
   def basic_deliver(_, opts, _, _), do: {:ok, opts}
 
-  def basic_return(channel, %{handler: handler} = opts, payload, meta), do: handler.basic_return(channel, opts, payload, meta)
+  def basic_return(channel, %{handler: handler} = opts, payload, meta),
+    do: handler.basic_return(channel, opts, payload, meta)
+
   def basic_return(_, opts, _, _), do: {:ok, opts}
 
-  def basic_consume_ok(channel, %{handler: handler} = opts, meta), do: handler.basic_consume_ok(channel, opts, meta)
+  def basic_consume_ok(channel, %{handler: handler} = opts, meta),
+    do: handler.basic_consume_ok(channel, opts, meta)
+
   def basic_consume_ok(_, opts, _), do: {:ok, opts}
 
-  def basic_cancel(channel, %{handler: handler} = opts, meta), do: handler.basic_cancel(channel, opts, meta)
+  def basic_cancel(channel, %{handler: handler} = opts, meta),
+    do: handler.basic_cancel(channel, opts, meta)
+
   def basic_cancel(_, opts, _), do: {:ok, opts}
 
-  def basic_cancel_ok(channel, %{handler: handler} = opts, meta), do: handler.basic_cancel_ok(channel, opts, meta)
+  def basic_cancel_ok(channel, %{handler: handler} = opts, meta),
+    do: handler.basic_cancel_ok(channel, opts, meta)
+
   def basic_cancel_ok(_, opts, _), do: {:ok, opts}
 
   def init(opts) do
@@ -44,13 +54,13 @@ defmodule Linklab.Bunny.Pool.Channel do
   end
 
   def handle_call(message, _from, state) do
-    {:reply, {:error, "invalid call message #{inspect message}"}, state}
+    {:reply, {:error, "invalid call message #{inspect(message)}"}, state}
   end
 
   def handle_info(:connect, %{opts: %{name: name} = opts, status: :disconnected} = state) do
     with {:ok, connection} <- Pool.get_connection(name),
-        {:ok, channel} <- Channel.open(connection),
-        {:ok, opts} <- setup(channel, opts) do
+         {:ok, channel} <- Channel.open(connection),
+         {:ok, opts} <- setup(channel, opts) do
       Process.monitor(connection.pid)
       {:noreply, %{state | channel: channel, opts: opts, status: :connected}}
     else
@@ -65,6 +75,7 @@ defmodule Linklab.Bunny.Pool.Channel do
     case basic_deliver(channel, opts, payload, meta) do
       {:ok, opts} ->
         {:noreply, %{state | opts: opts, status: :disconnected}}
+
       _ ->
         {:noreply, %{state | status: :disconnected}}
     end
@@ -75,6 +86,7 @@ defmodule Linklab.Bunny.Pool.Channel do
     case basic_return(channel, opts, payload, meta) do
       {:ok, opts} ->
         {:noreply, %{state | opts: opts}}
+
       _ ->
         {:noreply, state}
     end
@@ -85,17 +97,22 @@ defmodule Linklab.Bunny.Pool.Channel do
     case basic_consume_ok(channel, opts, meta) do
       {:ok, opts} ->
         {:noreply, %{state | opts: opts}}
+
       _ ->
         {:noreply, state}
     end
   end
 
   # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
-  def handle_info({:basic_cancel, meta}, %{channel: channel, opts: opts, status: :connected} = state) do
+  def handle_info(
+        {:basic_cancel, meta},
+        %{channel: channel, opts: opts, status: :connected} = state
+      ) do
     case basic_cancel(channel, opts, meta) do
       {:ok, opts} ->
         Process.send_after(self(), :connect, @reconnect_after_ms)
         {:noreply, %{state | opts: opts, status: :disconnected}}
+
       _ ->
         Process.send_after(self(), :connect, @reconnect_after_ms)
         {:noreply, %{state | status: :disconnected}}
@@ -103,11 +120,15 @@ defmodule Linklab.Bunny.Pool.Channel do
   end
 
   # Confirmation sent by the broker to the consumer process after a Basic.cancel
-  def handle_info({:basic_cancel_ok, meta}, %{channel: channel, opts: opts, status: :connected} = state) do
+  def handle_info(
+        {:basic_cancel_ok, meta},
+        %{channel: channel, opts: opts, status: :connected} = state
+      ) do
     case basic_cancel_ok(channel, opts, meta) do
       {:ok, opts} ->
         Process.send_after(self(), :connect, @reconnect_after_ms)
         {:noreply, %{state | opts: opts, status: :disconnected}}
+
       _ ->
         Process.send_after(self(), :connect, @reconnect_after_ms)
         {:noreply, %{state | status: :disconnected}}
