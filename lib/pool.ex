@@ -30,7 +30,7 @@ defmodule Linklab.Bunny.Pool do
             id: :"#{name}_connection_pool",
             start: {BunnyPoolConnection, :start_link, [opts]}
           },
-          :poolboy.child_spec(:"#{name}_channel_pool", pool_opts, opts)
+          :poolboy.child_spec(:"#{name}_channel_pool", pool_opts)
           | children
         ]
       end)

@@ -1,0 +1,7 @@
+{
+  "skip_files": [
+    "task",
+    "test",
+    "folder/file_to_skip.ex"
+  ]
+}

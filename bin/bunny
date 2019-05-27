@@ -58,6 +58,14 @@ devop_test()
       mix test
       ;;
 
+    "release")
+      mix test && \
+      mix dialyzer --halt-exit-status && \
+      mix credo --strict && \
+      mix format && \
+      mix coveralls.html
+      ;;
+
     "dialyzer")
       mix dialyzer --halt-exit-status
       ;;
@@ -72,6 +80,10 @@ devop_test()
 
     "watch")
       mix test.watch
+      ;;
+
+    "cover")
+      mix coveralls.html
       ;;
 
     "dev")

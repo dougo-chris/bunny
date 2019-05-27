@@ -2,7 +2,7 @@ defmodule Linklab.Bunny.Mixfile do
   use Mix.Project
 
   @version "0.1.0"
-  @elixir_version "~> 1.7"
+  @elixir_version "~> 1.8"
 
   def project do
     [
@@ -16,7 +16,10 @@ defmodule Linklab.Bunny.Mixfile do
       package: package(),
 
       aliases: aliases(),
-      dialyzer: dialyzer()
+      dialyzer: dialyzer(),
+
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [coveralls: :test, "coveralls.detail": :test, "coveralls.post": :test, "coveralls.html": :test]
     ]
   end
 
@@ -31,8 +34,9 @@ defmodule Linklab.Bunny.Mixfile do
 
       # DEV AND TEST
       {:dialyxir, "~> 0.5", only: :dev, runtime: false},
-      {:credo, "~>1.0", only: :dev, runtime: false},
-      {:mix_test_watch, "~> 0.9", only: :dev, runtime: false}
+      {:credo, "~> 1.0", only: :dev, runtime: false},
+      {:mix_test_watch, "~> 0.9", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.11", only: :test}
     ]
   end
 
