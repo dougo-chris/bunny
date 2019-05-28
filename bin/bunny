@@ -62,7 +62,7 @@ devop_test()
       mix test && \
       mix dialyzer --halt-exit-status && \
       mix credo --strict && \
-      mix format && \
+      mix format --check-formatted && \
       mix coveralls.html
       ;;
 
@@ -75,7 +75,7 @@ devop_test()
       ;;
 
     "format")
-      mix format
+      mix format --check-formatted
       ;;
 
     "watch")
