@@ -8,6 +8,7 @@ defmodule Linklab.Bunny.Pool.Channel do
   @reconnect_after_ms 5_000
 
   def start_link(opts) do
+    opts = Keyword.get(opts, :worker, %{})
     GenServer.start_link(__MODULE__, opts)
   end
 
