@@ -5,7 +5,6 @@ defmodule Linklab.Bunny.Pool do
   alias Linklab.Bunny.Pool.Channel, as: BunnyPoolChannel
   alias Linklab.Bunny.Pool.Connection, as: BunnyPoolConnection
 
-  @channel_size 5
   @channel_overflow 0
   @channel_strategy :fifo
 
@@ -16,24 +15,28 @@ defmodule Linklab.Bunny.Pool do
   @impl true
   def init(opts) do
     children =
-      Enum.reduce(opts, [], fn %{name: name} = opts, children ->
+      Enum.reduce(opts, [], fn worker_opts, children ->
+        channel_name = Keyword.get(worker_opts, :channel_name)
+        channel_size = Keyword.get(worker_opts, :channel_size)
+        channel_overflow = Keyword.get(worker_opts, :channel_overflow, @channel_overflow)
+
         pool_opts = [
-          name: {:local, :"#{name}_channel_pool"},
+          name: {:local, :"#{channel_name}_channel_pool"},
           worker_module: BunnyPoolChannel,
-          size: opts[:channel_size] || @channel_size,
-          max_overflow: opts[:channel_overflow] || @channel_overflow,
+          size: channel_size,
+          max_overflow: channel_overflow,
           strategy: @channel_strategy
         ]
 
         [
           %{
-            id: :"#{name}_connection_pool",
-            start: {BunnyPoolConnection, :start_link, [opts]}
+            id: :"#{channel_name}_connection_pool",
+            start: {BunnyPoolConnection, :start_link, [worker_opts]}
           },
           :poolboy.child_spec(
-            :"#{name}_channel_pool",
+            :"#{channel_name}_channel_pool",
             pool_opts,
-            worker: opts
+            worker_opts
           )
           | children
         ]
@@ -46,10 +49,10 @@ defmodule Linklab.Bunny.Pool do
     GenServer.call(BunnyPoolConnection.name(name), :connection)
   end
 
-  def with_channel(name, func) do
-    :poolboy.transaction(:"#{name}_channel_pool", fn pid ->
-      with {:ok, channel, opts} <- GenServer.call(pid, :channel) do
-        func.(channel, opts)
+  def with_channel(channel_name, func) do
+    :poolboy.transaction(:"#{channel_name}_channel_pool", fn pid ->
+      with {:ok, channel, config} <- GenServer.call(pid, :channel) do
+        func.(channel, config)
       end
     end)
   end

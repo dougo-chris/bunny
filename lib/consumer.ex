@@ -4,12 +4,12 @@ defmodule Linklab.Bunny.Consumer do
   alias AMQP.Basic, as: AMQPBasic
   alias Linklab.Bunny.Pool, as: BunnyPool
 
-  @callback setup(AMQP.Channel.t(), map) :: {:ok, map} | {:error, String.t()}
-  @callback basic_deliver(AMQP.Channel.t(), map, any, map) :: {:ok, map} | {:error, String.t()}
-  @callback basic_consume_ok(AMQP.Channel.t(), map, map) :: {:ok, map} | {:error, String.t()}
-  @callback basic_cancel(AMQP.Channel.t(), map, map) :: {:ok, map} | {:error, String.t()}
-  @callback basic_cancel_ok(AMQP.Channel.t(), map, map) :: {:ok, map} | {:error, String.t()}
-  @callback basic_return(AMQP.Channel.t(), map, any, map) :: {:ok, map} | {:error, String.t()}
+  @callback setup(AMQP.Channel.t(), map) :: :ok | no_return
+  @callback basic_deliver(AMQP.Channel.t(), any, map) :: :ok | no_return
+  @callback basic_consume_ok(AMQP.Channel.t(), map) :: :ok | no_return
+  @callback basic_cancel(AMQP.Channel.t(), map) :: :ok | no_return
+  @callback basic_cancel_ok(AMQP.Channel.t(), map) :: :ok | no_return
+  @callback basic_return(AMQP.Channel.t(), any, map) :: :ok | no_return
 
   defmacro __using__(_opts) do
     quote do
@@ -17,19 +17,19 @@ defmodule Linklab.Bunny.Consumer do
 
       @behaviour Linklab.Bunny.Consumer
 
-      def setup(_, opts), do: {:ok, opts}
-      def basic_deliver(_, opts, _, _), do: {:ok, opts}
-      def basic_consume_ok(_, opts, _), do: {:ok, opts}
-      def basic_cancel(_, opts, _), do: {:ok, opts}
-      def basic_cancel_ok(_, opts, _), do: {:ok, opts}
-      def basic_return(_, opts, _, _), do: {:ok, opts}
+      def setup(_, _config), do: :ok
+      def basic_deliver(_, _, _), do: :ok
+      def basic_consume_ok(_, _), do: :ok
+      def basic_cancel(_, _), do: :ok
+      def basic_cancel_ok(_, _), do: :ok
+      def basic_return(_, _, _), do: :ok
 
       defoverridable Linklab.Bunny.Consumer
     end
   end
 
-  def publish(name, routing_key, payload, options \\ []) do
-    BunnyPool.with_channel(name, fn channel, %{exchange: exchange} ->
+  def publish(channel_name, routing_key, payload, options \\ []) do
+    BunnyPool.with_channel(channel_name, fn channel, %{exchange: exchange} ->
       AMQPBasic.publish(channel, exchange, routing_key, payload, options)
     end)
   end

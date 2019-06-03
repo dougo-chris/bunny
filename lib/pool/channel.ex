@@ -8,46 +8,27 @@ defmodule Linklab.Bunny.Pool.Channel do
   @reconnect_after_ms 5_000
 
   def start_link(opts) do
-    opts = Keyword.get(opts, :worker, %{})
-    GenServer.start_link(__MODULE__, opts)
+    state = %{
+      channel_name: Keyword.get(opts, :channel_name),
+      handler: Keyword.get(opts, :handler),
+      config: Keyword.get(opts, :config)
+    }
+
+    GenServer.start_link(__MODULE__, state)
   end
 
-  def setup(channel, %{handler: handler} = opts), do: handler.setup(channel, opts)
-  def setup(_, opts), do: {:ok, opts}
-
-  def basic_deliver(channel, %{handler: handler} = opts, payload, meta),
-    do: handler.basic_deliver(channel, opts, payload, meta)
-
-  def basic_deliver(_, opts, _, _), do: {:ok, opts}
-
-  def basic_return(channel, %{handler: handler} = opts, payload, meta),
-    do: handler.basic_return(channel, opts, payload, meta)
-
-  def basic_return(_, opts, _, _), do: {:ok, opts}
-
-  def basic_consume_ok(channel, %{handler: handler} = opts, meta),
-    do: handler.basic_consume_ok(channel, opts, meta)
-
-  def basic_consume_ok(_, opts, _), do: {:ok, opts}
-
-  def basic_cancel(channel, %{handler: handler} = opts, meta),
-    do: handler.basic_cancel(channel, opts, meta)
-
-  def basic_cancel(_, opts, _), do: {:ok, opts}
-
-  def basic_cancel_ok(channel, %{handler: handler} = opts, meta),
-    do: handler.basic_cancel_ok(channel, opts, meta)
-
-  def basic_cancel_ok(_, opts, _), do: {:ok, opts}
-
-  def init(opts) do
+  def init(state) do
     Process.flag(:trap_exit, true)
     send(self(), :connect)
-    {:ok, %{channel: nil, opts: opts, status: :disconnected}}
+    {:ok, %{state | channel: nil, status: :disconnected}}
   end
 
-  def handle_call(:channel, _from, %{channel: channel, opts: opts, status: :connected} = state) do
-    {:reply, {:ok, channel, opts}, state}
+  def handle_call(
+        :channel,
+        _from,
+        %{channel: channel, config: config, status: :connected} = state
+      ) do
+    {:reply, {:ok, channel, config}, state}
   end
 
   def handle_call(:channel, _from, %{status: :disconnected} = state) do
@@ -58,12 +39,12 @@ defmodule Linklab.Bunny.Pool.Channel do
     {:reply, {:error, "invalid call message #{inspect(message)}"}, state}
   end
 
-  def handle_info(:connect, %{opts: %{name: name} = opts, status: :disconnected} = state) do
-    with {:ok, connection} <- Pool.get_connection(name),
-         {:ok, channel} <- Channel.open(connection),
-         {:ok, opts} <- setup(channel, opts) do
+  def handle_info(:connect, %{channel_name: channel_name, status: :disconnected} = state) do
+    with {:ok, connection} <- Pool.get_connection(channel_name),
+         {:ok, channel} <- Channel.open(connection) do
+      :ok = handler_setup(state)
       Process.monitor(connection.pid)
-      {:noreply, %{state | channel: channel, opts: opts, status: :connected}}
+      {:noreply, %{state | channel: channel, status: :connected}}
     else
       _ ->
         Process.send_after(self(), :connect, @reconnect_after_ms)
@@ -72,72 +53,37 @@ defmodule Linklab.Bunny.Pool.Channel do
   end
 
   # Deal with consumer messages
-  def handle_info({:basic_deliver, payload, meta}, %{channel: channel, opts: opts} = state) do
-    case basic_deliver(channel, opts, payload, meta) do
-      {:ok, opts} ->
-        {:noreply, %{state | opts: opts, status: :disconnected}}
-
-      _ ->
-        {:noreply, %{state | status: :disconnected}}
-    end
+  def handle_info({:basic_deliver, payload, meta}, state) do
+    :ok = handler_basic_deliver(state, payload, meta)
   end
 
   # Deal with producer messages
-  def handle_info({:basic_return, payload, meta}, %{channel: channel, opts: opts} = state) do
-    case basic_return(channel, opts, payload, meta) do
-      {:ok, opts} ->
-        {:noreply, %{state | opts: opts}}
-
-      _ ->
-        {:noreply, state}
-    end
+  def handle_info({:basic_return, payload, meta}, state) do
+    :ok = handler_basic_return(state, payload, meta)
+    {:noreply, state}
   end
 
   # Confirmation sent by the broker after registering this process as a consumer
-  def handle_info({:basic_consume_ok, meta}, %{channel: channel, opts: opts} = state) do
-    case basic_consume_ok(channel, opts, meta) do
-      {:ok, opts} ->
-        {:noreply, %{state | opts: opts}}
-
-      _ ->
-        {:noreply, state}
-    end
+  def handle_info({:basic_consume_ok, meta}, state) do
+    :ok = handler_basic_consume_ok(state, meta)
+    {:noreply, state}
   end
 
   # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
-  def handle_info(
-        {:basic_cancel, meta},
-        %{channel: channel, opts: opts, status: :connected} = state
-      ) do
-    case basic_cancel(channel, opts, meta) do
-      {:ok, opts} ->
-        Process.send_after(self(), :connect, @reconnect_after_ms)
-        {:noreply, %{state | opts: opts, status: :disconnected}}
-
-      _ ->
-        Process.send_after(self(), :connect, @reconnect_after_ms)
-        {:noreply, %{state | status: :disconnected}}
-    end
+  def handle_info({:basic_cancel, meta}, %{status: :connected} = state) do
+    :ok = handler_basic_cancel(state, meta)
+    Process.send_after(self(), :connect, @reconnect_after_ms)
+    {:noreply, %{state | status: :disconnected}}
   end
 
   # Confirmation sent by the broker to the consumer process after a Basic.cancel
-  def handle_info(
-        {:basic_cancel_ok, meta},
-        %{channel: channel, opts: opts, status: :connected} = state
-      ) do
-    case basic_cancel_ok(channel, opts, meta) do
-      {:ok, opts} ->
-        Process.send_after(self(), :connect, @reconnect_after_ms)
-        {:noreply, %{state | opts: opts, status: :disconnected}}
-
-      _ ->
-        Process.send_after(self(), :connect, @reconnect_after_ms)
-        {:noreply, %{state | status: :disconnected}}
-    end
+  def handle_info({:basic_cancel_ok, meta}, %{status: :connected} = state) do
+    :ok = handler_basic_cancel_ok(state, meta)
+    Process.send_after(self(), :connect, @reconnect_after_ms)
+    {:noreply, %{state | status: :disconnected}}
   end
 
   def handle_info({:EXIT, _pid, _reason}, state) do
-    # IO.inspect("Exit message from: #{inspect pid}, reason: #{inspect reason}")
     {:noreply, state}
   end
 
@@ -158,5 +104,29 @@ defmodule Linklab.Bunny.Pool.Channel do
 
   def terminate(_reason, _state) do
     :ok
+  end
+
+  defp handler_setup(%{handler: handler, channel: channel, config: config}) do
+    handler.setup(channel, config)
+  end
+
+  def handler_basic_deliver(%{handler: handler, channel: channel}, payload, meta) do
+    handler.basic_deliver(channel, payload, meta)
+  end
+
+  def handler_basic_return(%{handler: handler, channel: channel}, payload, meta) do
+    handler.basic_return(channel, payload, meta)
+  end
+
+  def handler_basic_consume_ok(%{handler: handler, channel: channel}, meta) do
+    handler.basic_consume_ok(channel, meta)
+  end
+
+  def handler_basic_cancel(%{handler: handler, channel: channel}, meta) do
+    handler.basic_cancel(channel, meta)
+  end
+
+  def handler_basic_cancel_ok(%{handler: handler, channel: channel}, meta) do
+    handler.basic_cancel_ok(channel, meta)
   end
 end

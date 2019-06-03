@@ -115,37 +115,46 @@ defmodule Rabbit.Application do
   def start(_type, _args) do
     children = [
       {Linklab.Bunny.Pool, [
-        %{
-          name: :server,
-          host: "localhost",
-          username: "guest",
-          password: "guest",
-          heartbeat: 30,
+        [
+          channel_name: :server,
           channel_size: 1,
           channel_overflow: 0,
 
-          exchange: "testing_exchange",
-          topic: "testing_topic",
+          env: %{
+            host: "localhost",
+            username: "guest",
+            password: "guest",
+            heartbeat: 30
+          },
 
-          queue: "testing_queue",
           handler: Rabbit.Server,
-          prefetch_count: 10,
-        },
-        %{
-          name: :client,
-          host: "localhost",
-          username: "guest",
-          password: "guest",
-          heartbeat: 30,
+          config: %{
+            exchange: "testing_exchange",
+            queue: "testing_queue",
+            topic: "testing_topic",
+            prefetch: 10
+          }
+        ],
+        [
+          channel_name: :client,
           channel_size: 10,
           channel_overflow: 0,
 
-          exchange: "testing_exchange",
-          topic: "testing_topic",
+          env: %{
+            host: "localhost",
+            username: "guest",
+            password: "guest",
+            heartbeat: 30
+          }
 
-          # queue: "testing_queue",
           # handler: Rabbit.Client,
-        }
+          config: %{
+            exchange: "testing_exchange",
+            topic: "testing_topic",
+            # queue: "testing_queue"
+          }
+
+        ]
       ]}
     ]
 

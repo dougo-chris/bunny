@@ -5,18 +5,20 @@ defmodule Linklab.Bunny.Pool.Connection do
 
   @reconnect_after_ms 5_000
 
-  def start_link(%{name: name} = opts) do
-    GenServer.start_link(__MODULE__, opts, name: name(name))
+  def start_link(opts) do
+    channel_name = Keyword.get(opts, :channel_name)
+    env = Keyword.get(opts, :env, %{})
+    GenServer.start_link(__MODULE__, env, name: name(channel_name))
   end
 
-  def name(name) do
-    :"#{name}_connection_pool"
+  def name(channel_name) do
+    :"#{channel_name}_connection"
   end
 
-  def init(opts) do
+  def init(env) do
     Process.flag(:trap_exit, true)
     send(self(), :connect)
-    {:ok, %{connection: nil, opts: opts, status: :disconnected}}
+    {:ok, %{env: env, connection: nil, status: :disconnected}}
   end
 
   def handle_call(:connection, _from, %{connection: connection, status: :connected} = state) do
@@ -31,16 +33,8 @@ defmodule Linklab.Bunny.Pool.Connection do
     {:reply, {:error, "invalid call"}, state}
   end
 
-  def handle_info(:connect, %{opts: opts, status: :disconnected} = state) do
-    connection_options = [
-      host: Map.get(opts, :host),
-      port: Map.get(opts, :port, 5672),
-      username: Map.get(opts, :username),
-      password: Map.get(opts, :password),
-      heartbeat: Map.get(opts, :heartbeat, 30)
-    ]
-
-    case Connection.open(connection_options) do
+  def handle_info(:connect, %{env: env} = state) do
+    case Connection.open(env) do
       {:ok, connection} ->
         Process.monitor(connection.pid)
         {:noreply, %{state | connection: connection, status: :connected}}
