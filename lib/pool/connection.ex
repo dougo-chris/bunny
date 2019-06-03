@@ -12,7 +12,7 @@ defmodule Linklab.Bunny.Pool.Connection do
   end
 
   def name(channel_name) do
-    :"#{channel_name}_pool_connection"
+    :"#{channel_name}_connection"
   end
 
   def init(env) do

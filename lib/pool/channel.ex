@@ -20,7 +20,7 @@ defmodule Linklab.Bunny.Pool.Channel do
   end
 
   def name(channel_name) do
-    :"#{channel_name}_pool_channel"
+    :"#{channel_name}_channel_pool"
   end
 
   def init(state) do
