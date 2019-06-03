@@ -42,25 +42,24 @@ defmodule Rabbit.Server do
   use Linklab.Bunny.Consumer
 
   @impl true
-  def setup(channel, %{exchange: exchange, queue: queue, topic: topic} = opts) do
+  def setup(channel, %{exchange: exchange, queue: queue, topic: topic, prefetch: prefetch} = opts) do
     {:ok, _} = AMQP.Queue.declare(channel, "#{queue}_error", durable: true)
     {:ok, _} = AMQP.Queue.declare(channel, queue,
                              durable: true,
                              arguments: [
                                {"x-dead-letter-exchange", :longstr, ""},
                                {"x-dead-letter-routing-key", :longstr, "#{queue}_error"}])
-    IO.inspect("Server #{topic}")
 
     :ok = AMQP.Exchange.topic(channel, exchange, durable: true)
     :ok = AMQP.Queue.bind(channel, queue, exchange, routing_key: topic)
 
     # Limit unacknowledged messages
-    :ok = AMQP.Basic.qos(channel, prefetch_count: Map.get(opts, :prefetch_count, 10))
+    :ok = AMQP.Basic.qos(channel, prefetch_count: prefetch)
 
     # Register the GenServer process as a consumer
-    {:ok, consumer_tag} = AMQP.Basic.consume(channel, queue, self())
+    {:ok, _consumer_tag} = AMQP.Basic.consume(channel, queue, self())
 
-    {:ok, Map.put(opts, :consumer_tag, consumer_tag)}
+    :ok
   end
 
   @impl true
@@ -85,7 +84,7 @@ end
 #   use Bunny.Consumer
 
 #   @impl true
-#   def setup(channel, %{exchange: exchange, queue: queue, topic: topic} = opts) do
+#   def setup(channel, %{exchange: exchange, queue: queue, topic: topic, prefetch: prefetch}) do
 #     IO.inspect("Client #{topic}")
 #     {:ok, _} = AMQP.Queue.declare(channel, "#{queue}_error", durable: true)
 #     {:ok, _} = AMQP.Queue.declare(channel, queue,
@@ -96,14 +95,11 @@ end
 
 #     :ok = AMQP.Exchange.topic(channel, exchange, durable: true)
 #     :ok = AMQP.Queue.bind(channel, queue, exchange, routing_key: topic)
-
 #     # Limit unacknowledged messages to 10
-#     # :ok = AMQP.Basic.qos(channel, prefetch_count: Map.get(opts, :prefetch_count, 10))
-
+#     # :ok = AMQP.Basic.qos(channel, prefetch_count: prefetch)
 #     # Register the GenServer process as a return handler
 #     :ok = AMQP.Basic.return(channel, self())
-
-#     {:ok, opts}
+#     :ok
 #   end
 # end
 
@@ -120,12 +116,12 @@ defmodule Rabbit.Application do
           channel_size: 1,
           channel_overflow: 0,
 
-          env: %{
+          env: [
             host: "localhost",
             username: "guest",
             password: "guest",
             heartbeat: 30
-          },
+          ],
 
           handler: Rabbit.Server,
           config: %{

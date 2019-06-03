@@ -21,7 +21,7 @@ defmodule Linklab.Bunny.Pool do
         channel_overflow = Keyword.get(worker_opts, :channel_overflow, @channel_overflow)
 
         pool_opts = [
-          name: {:local, :"#{channel_name}_channel_pool"},
+          name: {:local, BunnyPoolChannel.name(channel_name)},
           worker_module: BunnyPoolChannel,
           size: channel_size,
           max_overflow: channel_overflow,
@@ -30,11 +30,11 @@ defmodule Linklab.Bunny.Pool do
 
         [
           %{
-            id: :"#{channel_name}_connection_pool",
+            id: BunnyPoolConnection.name(channel_name),
             start: {BunnyPoolConnection, :start_link, [worker_opts]}
           },
           :poolboy.child_spec(
-            :"#{channel_name}_channel_pool",
+            BunnyPoolChannel.name(channel_name),
             pool_opts,
             worker_opts
           )
@@ -45,12 +45,12 @@ defmodule Linklab.Bunny.Pool do
     Supervisor.start_link(children, strategy: :one_for_one)
   end
 
-  def get_connection(name) do
-    GenServer.call(BunnyPoolConnection.name(name), :connection)
+  def get_connection(channel_name) do
+    GenServer.call(BunnyPoolConnection.name(channel_name), :connection)
   end
 
   def with_channel(channel_name, func) do
-    :poolboy.transaction(:"#{channel_name}_channel_pool", fn pid ->
+    :poolboy.transaction(BunnyPoolChannel.name(channel_name), fn pid ->
       with {:ok, channel, config} <- GenServer.call(pid, :channel) do
         func.(channel, config)
       end

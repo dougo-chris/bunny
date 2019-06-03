@@ -4,12 +4,14 @@ defmodule Linklab.Bunny.Consumer do
   alias AMQP.Basic, as: AMQPBasic
   alias Linklab.Bunny.Pool, as: BunnyPool
 
-  @callback setup(channel:: AMQP.Channel.t(), config:: map) :: :ok | no_return
-  @callback basic_deliver(channel:: AMQP.Channel.t(), payload :: any, meta :: map) :: :ok | no_return
-  @callback basic_return(channel:: AMQP.Channel.t(), payload :: any, meta :: map) :: :ok | no_return
-  @callback basic_consume_ok(channel:: AMQP.Channel.t(), meta :: map) :: :ok | no_return
-  @callback basic_cancel(channel:: AMQP.Channel.t(), meta :: map) :: :ok | no_return
-  @callback basic_cancel_ok(channel:: AMQP.Channel.t(), meta :: map) :: :ok | no_return
+  @callback setup(channel :: AMQP.Channel.t(), config :: map) :: :ok | no_return
+  @callback basic_deliver(channel :: AMQP.Channel.t(), payload :: any, meta :: map) ::
+              :ok | no_return
+  @callback basic_return(channel :: AMQP.Channel.t(), payload :: any, meta :: map) ::
+              :ok | no_return
+  @callback basic_consume_ok(channel :: AMQP.Channel.t(), meta :: map) :: :ok | no_return
+  @callback basic_cancel(channel :: AMQP.Channel.t(), meta :: map) :: :ok | no_return
+  @callback basic_cancel_ok(channel :: AMQP.Channel.t(), meta :: map) :: :ok | no_return
 
   defmacro __using__(_opts) do
     quote do

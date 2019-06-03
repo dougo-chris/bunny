@@ -11,16 +11,22 @@ defmodule Linklab.Bunny.Pool.Channel do
     state = %{
       channel_name: Keyword.get(opts, :channel_name),
       handler: Keyword.get(opts, :handler),
-      config: Keyword.get(opts, :config)
+      config: Keyword.get(opts, :config),
+      channel: nil,
+      status: :disconnected
     }
 
     GenServer.start_link(__MODULE__, state)
   end
 
+  def name(channel_name) do
+    :"#{channel_name}_pool_channel"
+  end
+
   def init(state) do
     Process.flag(:trap_exit, true)
     send(self(), :connect)
-    {:ok, %{state | channel: nil, status: :disconnected}}
+    {:ok, state}
   end
 
   def handle_call(
@@ -42,7 +48,7 @@ defmodule Linklab.Bunny.Pool.Channel do
   def handle_info(:connect, %{channel_name: channel_name, status: :disconnected} = state) do
     with {:ok, connection} <- Pool.get_connection(channel_name),
          {:ok, channel} <- Channel.open(connection) do
-      :ok = handler_setup(state)
+      :ok = handler_setup(channel, state)
       Process.monitor(connection.pid)
       {:noreply, %{state | channel: channel, status: :connected}}
     else
@@ -106,7 +112,7 @@ defmodule Linklab.Bunny.Pool.Channel do
     :ok
   end
 
-  defp handler_setup(%{handler: handler, channel: channel, config: config}) do
+  defp handler_setup(channel, %{handler: handler, config: config}) do
     handler.setup(channel, config)
   end
 

@@ -7,12 +7,12 @@ defmodule Linklab.Bunny.Pool.Connection do
 
   def start_link(opts) do
     channel_name = Keyword.get(opts, :channel_name)
-    env = Keyword.get(opts, :env, %{})
+    env = Keyword.get(opts, :env)
     GenServer.start_link(__MODULE__, env, name: name(channel_name))
   end
 
   def name(channel_name) do
-    :"#{channel_name}_connection"
+    :"#{channel_name}_pool_connection"
   end
 
   def init(env) do
@@ -50,7 +50,6 @@ defmodule Linklab.Bunny.Pool.Connection do
   end
 
   def handle_info({:EXIT, _pid, _reason}, state) do
-    # IO.inspect("Exit message from: #{inspect pid}, reason: #{inspect reason}")
     {:noreply, state}
   end
 
