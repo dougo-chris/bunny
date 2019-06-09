@@ -47,8 +47,8 @@ defmodule Linklab.Bunny.Pool.Channel do
 
   def handle_info(:connect, %{channel_name: channel_name, status: :disconnected} = state) do
     with {:ok, connection} <- Pool.get_connection(channel_name),
-         {:ok, channel} <- Channel.open(connection) do
-      :ok = handler_setup(channel, state)
+         {:ok, channel} <- Channel.open(connection),
+         :ok <- handler_setup(channel, state) do
       Process.monitor(connection.pid)
       {:noreply, %{state | channel: channel, status: :connected}}
     else
@@ -60,31 +60,32 @@ defmodule Linklab.Bunny.Pool.Channel do
 
   # Deal with consumer messages
   def handle_info({:basic_deliver, payload, meta}, state) do
-    :ok = handler_basic_deliver(state, payload, meta)
+    _ = handler_basic_deliver(state, payload, meta)
+    {:noreply, state}
   end
 
   # Deal with producer messages
   def handle_info({:basic_return, payload, meta}, state) do
-    :ok = handler_basic_return(state, payload, meta)
+    _ = handler_basic_return(state, payload, meta)
     {:noreply, state}
   end
 
   # Confirmation sent by the broker after registering this process as a consumer
   def handle_info({:basic_consume_ok, meta}, state) do
-    :ok = handler_basic_consume_ok(state, meta)
+    _ = handler_basic_consume_ok(state, meta)
     {:noreply, state}
   end
 
   # Sent by the broker when the consumer is unexpectedly cancelled (such as after a queue deletion)
   def handle_info({:basic_cancel, meta}, %{status: :connected} = state) do
-    :ok = handler_basic_cancel(state, meta)
+    _ = handler_basic_cancel(state, meta)
     Process.send_after(self(), :connect, @reconnect_after_ms)
     {:noreply, %{state | status: :disconnected}}
   end
 
   # Confirmation sent by the broker to the consumer process after a Basic.cancel
   def handle_info({:basic_cancel_ok, meta}, %{status: :connected} = state) do
-    :ok = handler_basic_cancel_ok(state, meta)
+    _ = handler_basic_cancel_ok(state, meta)
     Process.send_after(self(), :connect, @reconnect_after_ms)
     {:noreply, %{state | status: :disconnected}}
   end
