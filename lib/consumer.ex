@@ -2,7 +2,6 @@ defmodule Linklab.Bunny.Consumer do
   @moduledoc false
 
   alias AMQP.Basic, as: AMQPBasic
-  alias Linklab.Bunny.Pool, as: BunnyPool
 
   @callback setup(channel :: AMQP.Channel.t(), config :: map) :: :ok | no_return
   @callback basic_deliver(channel :: AMQP.Channel.t(), payload :: any, meta :: map) ::
@@ -28,12 +27,6 @@ defmodule Linklab.Bunny.Consumer do
 
       defoverridable Linklab.Bunny.Consumer
     end
-  end
-
-  def publish(channel_name, routing_key, payload, options \\ []) do
-    BunnyPool.with_channel(channel_name, fn channel, %{exchange: exchange} ->
-      AMQPBasic.publish(channel, exchange, routing_key, payload, options)
-    end)
   end
 
   def ack(channel, tag) do
