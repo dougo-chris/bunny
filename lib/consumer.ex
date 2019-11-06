@@ -1,4 +1,4 @@
-defmodule Linklab.Bunny.Consumer do
+defmodule BunnyRabbit.Consumer do
   @moduledoc false
 
   alias AMQP.Basic, as: AMQPBasic
@@ -14,9 +14,9 @@ defmodule Linklab.Bunny.Consumer do
 
   defmacro __using__(_opts) do
     quote do
-      import Linklab.Bunny.Consumer
+      import BunnyRabbit.Consumer
 
-      @behaviour Linklab.Bunny.Consumer
+      @behaviour BunnyRabbit.Consumer
 
       def setup(_, _config), do: :ok
       def basic_deliver(_, _, _), do: :ok
@@ -25,7 +25,7 @@ defmodule Linklab.Bunny.Consumer do
       def basic_cancel(_, _), do: :ok
       def basic_cancel_ok(_, _), do: :ok
 
-      defoverridable Linklab.Bunny.Consumer
+      defoverridable BunnyRabbit.Consumer
     end
   end
 

@@ -1,9 +1,9 @@
-defmodule Linklab.Bunny.Pool.Channel do
+defmodule BunnyRabbit.Pool.Channel do
   @moduledoc false
   use GenServer
   use AMQP
 
-  alias Linklab.Bunny.Pool
+  alias BunnyRabbit.Pool
 
   @reconnect_after_ms 5_000
 

@@ -1,9 +1,9 @@
-defmodule Linklab.Bunny.Pool do
+defmodule BunnyRabbit.Pool do
   @moduledoc false
   use GenServer
 
-  alias Linklab.Bunny.Pool.Channel, as: BunnyPoolChannel
-  alias Linklab.Bunny.Pool.Connection, as: BunnyPoolConnection
+  alias BunnyRabbit.Pool.Channel, as: BunnyRabbitPoolChannel
+  alias BunnyRabbit.Pool.Connection, as: BunnyRabbitPoolConnection
 
   @channel_overflow 0
   @channel_strategy :fifo
@@ -21,8 +21,8 @@ defmodule Linklab.Bunny.Pool do
         channel_overflow = Keyword.get(worker_opts, :channel_overflow, @channel_overflow)
 
         pool_opts = [
-          name: {:local, BunnyPoolChannel.name(channel_name)},
-          worker_module: BunnyPoolChannel,
+          name: {:local, BunnyRabbitPoolChannel.name(channel_name)},
+          worker_module: BunnyRabbitPoolChannel,
           size: channel_size,
           max_overflow: channel_overflow,
           strategy: @channel_strategy
@@ -30,11 +30,11 @@ defmodule Linklab.Bunny.Pool do
 
         [
           %{
-            id: BunnyPoolConnection.name(channel_name),
-            start: {BunnyPoolConnection, :start_link, [worker_opts]}
+            id: BunnyRabbitPoolConnection.name(channel_name),
+            start: {BunnyRabbitPoolConnection, :start_link, [worker_opts]}
           },
           :poolboy.child_spec(
-            BunnyPoolChannel.name(channel_name),
+            BunnyRabbitPoolChannel.name(channel_name),
             pool_opts,
             worker_opts
           )
@@ -46,11 +46,11 @@ defmodule Linklab.Bunny.Pool do
   end
 
   def get_connection(channel_name) do
-    GenServer.call(BunnyPoolConnection.name(channel_name), :connection)
+    GenServer.call(BunnyRabbitPoolConnection.name(channel_name), :connection)
   end
 
   def with_channel(channel_name, func) do
-    :poolboy.transaction(BunnyPoolChannel.name(channel_name), fn pid ->
+    :poolboy.transaction(BunnyRabbitPoolChannel.name(channel_name), fn pid ->
       with {:ok, channel, config} <- GenServer.call(pid, :channel) do
         func.(channel, config)
       end

@@ -1,4 +1,4 @@
-# Linklab.Rabbit
+# BunnyRabbit.Rabbit
 
 # DEVELOPMENT
 ```./bin/api_linklab clean```     To clean runtime dependencies
@@ -39,7 +39,7 @@ rabbitmq:3-management
 ## Server
 ```
 defmodule Rabbit.Server do
-  use Linklab.Bunny.Consumer
+  use BunnyRabbit.Consumer
 
   @impl true
   def setup(channel, %{exchange: exchange, queue: queue, topic: topic, prefetch: prefetch} = opts) do
@@ -81,7 +81,7 @@ defmodule Rabbit.Server do
 end
 
 # defmodule Rabbit.Client do
-#   use Bunny.Consumer
+#   use BunnyRabbit.Consumer
 
 #   @impl true
 #   def setup(channel, %{exchange: exchange, queue: queue, topic: topic, prefetch: prefetch}) do
@@ -110,7 +110,7 @@ defmodule Rabbit.Application do
 
   def start(_type, _args) do
     children = [
-      {Linklab.Bunny.Pool, [
+      {BunnyRabbit.Pool, [
         [
           channel_name: :server,
           channel_size: 1,

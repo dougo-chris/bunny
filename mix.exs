@@ -1,4 +1,4 @@
-defmodule Linklab.Bunny.Mixfile do
+defmodule BunnyRabbit.Mixfile do
   use Mix.Project
 
   @version "0.1.0"
@@ -6,7 +6,7 @@ defmodule Linklab.Bunny.Mixfile do
 
   def project do
     [
-      app: :linklab_bunny,
+      app: :bunny_rabbit,
       version: @version,
       elixir: @elixir_version,
       elixirc_paths: elixirc_paths(Mix.env()),

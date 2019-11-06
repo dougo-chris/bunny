@@ -1,12 +1,12 @@
-defmodule Linklab.Bunny.Publisher do
+defmodule BunnyRabbit.Publisher do
   @moduledoc false
 
   alias AMQP.Basic, as: AMQPBasic
-  alias Linklab.Bunny.Pool, as: BunnyPool
+  alias BunnyRabbit.Pool, as: BunnyRabbitPool
 
   @spec publish(atom, any, list) :: :ok | AMQP.Basic.error()
   def publish(channel_name, payload, options \\ []) do
-    BunnyPool.with_channel(channel_name, fn
+    BunnyRabbitPool.with_channel(channel_name, fn
       channel, %{exchange: exchange, topic: topic} ->
         AMQPBasic.publish(channel, exchange, topic, payload, options)
 
@@ -16,7 +16,7 @@ defmodule Linklab.Bunny.Publisher do
   end
 
   def retry(channel_name, payload, options \\ []) do
-    BunnyPool.with_channel(channel_name, fn
+    BunnyRabbitPool.with_channel(channel_name, fn
       channel, %{exchange: exchange, topic: topic} ->
         AMQP.Basic.publish(channel, exchange, "#{topic}-retry", payload, options)
 

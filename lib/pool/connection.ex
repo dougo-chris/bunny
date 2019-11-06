@@ -1,4 +1,4 @@
-defmodule Linklab.Bunny.Pool.Connection do
+defmodule BunnyRabbit.Pool.Connection do
   @moduledoc false
   use GenServer
   use AMQP
