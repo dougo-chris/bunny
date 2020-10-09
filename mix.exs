@@ -1,8 +1,8 @@
 defmodule BunnyRabbit.Mixfile do
   use Mix.Project
 
-  @version "0.1.0"
-  @elixir_version "~> 1.8"
+  @version "0.2.0"
+  @elixir_version "~> 1.9"
 
   def project do
     [
@@ -28,14 +28,14 @@ defmodule BunnyRabbit.Mixfile do
 
   defp deps do
     [
-      {:amqp, "~> 1.2"},
+      {:amqp, "~> 1.6"},
       {:poolboy, "~> 1.5"},
 
       # DEV AND TEST
-      {:dialyxir, "~> 0.5", only: :dev, runtime: false},
-      {:credo, "~> 1.0", only: :dev, runtime: false},
-      {:mix_test_watch, "~> 0.9", only: :dev, runtime: false},
-      {:excoveralls, "~> 0.11", only: :test}
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
+      {:credo, "~>1.0", only: :dev, runtime: false},
+      {:mix_test_watch, "~> 1.0", only: :dev, runtime: false},
+      {:excoveralls, "~> 0.12", only: :test},
     ]
   end
 

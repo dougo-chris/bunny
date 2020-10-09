@@ -23,7 +23,8 @@ devop_command()
     "upgrade")
       mix deps.clean --unused && \
       mix deps.update --all && \
-      mix deps.get
+      mix deps.get && \
+      mix hex.outdated
       ;;
 
     "dev")
