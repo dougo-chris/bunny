@@ -38,7 +38,7 @@ defmodule BunnyRabbit.Pool.Channel do
   end
 
   def handle_call(:channel, _from, %{status: :disconnected} = state) do
-    {:reply, {:error, "no channel"}, state}
+    {:reply, {:error, "channel disconnected"}, state}
   end
 
   def handle_call(message, _from, state) do
