@@ -28,7 +28,7 @@ defmodule BunnyRabbit.Mixfile do
 
   defp deps do
     [
-      {:amqp, "~> 1.6"},
+      {:amqp, "~> 2.1"},
       {:poolboy, "~> 1.5"},
 
       # DEV AND TEST
